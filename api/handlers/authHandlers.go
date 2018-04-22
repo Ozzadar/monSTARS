@@ -8,9 +8,11 @@
 package handlers
 
 import (
+	"encoding/json"
 	"errors"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/badoux/checkmail"
@@ -30,10 +32,20 @@ type JWTClaims struct {
 
 //Login logs user in
 func Login(c echo.Context) error {
-	username := c.FormValue("username")
-	password := c.FormValue("password")
+	jsonMap := make(map[string]interface{})
 
-	if username != "" && password != "" {
+	err := json.NewDecoder(c.Request().Body).Decode(&jsonMap)
+
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"message": "No credentials provided.",
+		})
+	}
+
+	username, okUsername := jsonMap["username"].(string)
+	password, okPassword := jsonMap["password"].(string)
+
+	if okUsername && okPassword && username != "" && password != "" {
 		//Check if valid login
 		user := db.GetUser(username, password)
 
@@ -67,44 +79,84 @@ func Login(c echo.Context) error {
 	})
 }
 
+//VerifyJWT checks to see if JWT is valid and active
+func VerifyJWT(c echo.Context) error {
+	jsonMap := make(map[string]interface{})
+
+	err := json.NewDecoder(c.Request().Body).Decode(&jsonMap)
+
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"message": "No JWT provided.",
+		})
+	}
+
+	token, okJWT := jsonMap["token"].(string)
+
+	if okJWT && token != "" {
+		//Check if valid login
+		isValid := db.JWTExists(token)
+
+		if isValid {
+			return c.JSON(http.StatusOK, map[string]string{
+				"message": "Valid and Active JWT",
+				"token":   token,
+			})
+		}
+	}
+
+	return c.JSON(http.StatusUnauthorized, map[string]string{
+		"message": "JWT expired or inactive",
+	})
+}
+
 //Register a new user
 func Register(c echo.Context) error {
-	username := c.FormValue("username")
-	password := c.FormValue("password")
-	email := c.FormValue("email")
+	jsonMap := make(map[string]interface{})
+
+	err := json.NewDecoder(c.Request().Body).Decode(&jsonMap)
+
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"message": "No credentials provided.",
+		})
+	}
+
+	username, okUsername := jsonMap["username"].(string)
+	password, okPassword := jsonMap["password"].(string)
+	email, okEmail := jsonMap["email"].(string)
 
 	errors := make(map[string]string)
 
-	if len(username) == 0 {
+	if okUsername && len(username) == 0 {
 		errors["username"] = "Must provide a username"
 	}
 
-	if len(password) == 0 {
+	if okPassword && len(password) == 0 {
 		errors["password"] = "Must provide a password"
 	}
 
-	if len(email) == 0 {
+	if okEmail && len(email) == 0 {
 		errors["email"] = "Must provide an email"
 	} else {
 		formatErr := checkmail.ValidateFormat(email)
 		if formatErr != nil {
 			errors["email"] = "Email not in correct format"
-		} else {
-			hostErr := checkmail.ValidateHost(email)
-
-			if _, ok := hostErr.(checkmail.SmtpError); !ok && hostErr != nil {
-				errors["email"] = "Email host cannot be resolved; please use a real email address"
-			} else if ok && hostErr != nil {
-				errors["email"] = "Email account that you provided does not exist; please use a real email address"
-			}
 		}
-
 	}
 
 	if len(errors) != 0 {
+
+		messages := ""
+
+		for _, message := range errors {
+			messages += message + ", "
+		}
+
+		messages = strings.TrimSuffix(messages, ", ")
+
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{
-			"message": "Incomplete form data",
-			"errors":  errors,
+			"message": "Incomplete/Invalid form data: " + messages,
 		})
 	}
 
