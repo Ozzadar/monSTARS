@@ -15,6 +15,7 @@ import (
 	"github.com/ozzadar/monSTARS/db"
 	"github.com/ozzadar/monSTARS/router"
 	"github.com/ozzadar/monSTARS/services/jwtservice"
+	"github.com/ozzadar/monSTARS/services/paypalservice"
 )
 
 func main() {
@@ -25,7 +26,11 @@ func main() {
 	}
 
 	//Config used here
+	//Initialize the database
 	db.Init()
+	//Initialize paypal
+	paypalservice.Init()
+
 	ip, err := config.Config.GetString("default", "bind_ip")
 	if err != nil {
 		fmt.Println("bind_ip not defined in config; exiting.")

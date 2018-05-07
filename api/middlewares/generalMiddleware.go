@@ -14,6 +14,7 @@ import (
 
 //SetMainMiddlewares will add middleware to the main echo instance
 func SetMainMiddlewares(e *echo.Echo) {
+
 	e.Use(middleware.StaticWithConfig(middleware.StaticConfig{
 		Root: "./static",
 	}))

@@ -20,11 +20,14 @@ var (
 	UserDB = "users"
 	//ActiveJWTDB : the name of the active jwt table
 	ActiveJWTDB = "active_tokens"
+	//TransactionsDB : name of the transactions table
+	TransactionsDB = "transactions"
 )
 
 //Init supporting database functions
 func Init() {
 	InitDB()
+
 }
 
 //InitDB : initializes connection to the rethink database
@@ -88,6 +91,13 @@ func InitDB() {
 
 	if err != nil {
 		logging.Log("Failed in creating Active JWT table")
+	}
+
+	//Create transactions table
+	_, err = r.DB(rethinkdbname).TableCreate(TransactionsDB).RunWrite(session)
+
+	if err != nil {
+		logging.Log("Failed in creating Transactions table")
 	}
 
 	session, err = r.Connect(r.ConnectOpts{

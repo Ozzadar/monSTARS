@@ -16,5 +16,5 @@ import (
 func UserGroup(g *echo.Group) {
 	g.GET("/", handlers.AppMain)
 	g.GET("", handlers.AppMain)
-
+	g.POST("/donate", handlers.Donate)
 }
