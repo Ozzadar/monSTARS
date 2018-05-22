@@ -20,6 +20,7 @@ func MainGroup(e *echo.Echo) {
 		AllowOrigins: []string{"*"},
 		AllowMethods: []string{echo.GET, echo.PUT, echo.POST, echo.DELETE},
 	}))
+	e.GET("/ws", handlers.Hello)
 
 	e.POST("/login", handlers.Login)
 	e.POST("/register", handlers.Register)

@@ -9,26 +9,16 @@ package handlers
 
 import (
 	"encoding/json"
-	"errors"
-	"log"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/badoux/checkmail"
 
-	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
-	"github.com/ozzadar/monSTARS/config"
 	"github.com/ozzadar/monSTARS/db"
 	"github.com/ozzadar/monSTARS/models"
+	"github.com/ozzadar/monSTARS/services/jwtservice/gameservice"
 )
-
-//JWTClaims type
-type JWTClaims struct {
-	models.User
-	jwt.StandardClaims
-}
 
 //Login logs user in
 func Login(c echo.Context) error {
@@ -46,32 +36,14 @@ func Login(c echo.Context) error {
 	password, okPassword := jsonMap["password"].(string)
 
 	if okUsername && okPassword && username != "" && password != "" {
-		//Check if valid login
-		user := db.GetUser(username, password)
 
-		if user != nil {
-			//Create JWT Token
-			token, err := CreateJwtToken(c, user)
+		token := gameservice.LoginWithUserPass(username, password)
 
-			if err != nil {
-				log.Printf("Failed to create token: %#v", err)
-				return c.String(http.StatusInternalServerError, "something")
-			}
+		return c.JSON(http.StatusOK, map[string]string{
+			"message": "Logged in!",
+			"token":   token,
+		})
 
-			user.LoggedIn = true
-			go func() {
-				db.UpdateUserLoginState(user)
-				db.AddJWT(&models.JwtToken{
-					Owner: user.Username,
-					Token: token,
-				})
-			}()
-
-			return c.JSON(http.StatusOK, map[string]string{
-				"message": "Logged in!",
-				"token":   token,
-			})
-		}
 	}
 
 	return c.JSON(http.StatusBadRequest, map[string]string{
@@ -175,31 +147,4 @@ func Register(c echo.Context) error {
 		"message": message,
 	})
 
-}
-
-//CreateJwtToken create a token
-func CreateJwtToken(c echo.Context, user *models.User) (string, error) {
-	claims := JWTClaims{
-		User: *user,
-		StandardClaims: jwt.StandardClaims{
-			IssuedAt:  time.Now().Unix(),
-			Id:        "main_user_id",
-			ExpiresAt: time.Now().Add(time.Hour * 24 * 7).Unix(),
-		},
-	}
-
-	rawToken := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
-
-	if signingKey, err := config.Config.GetString("default", "jwt_secret_key"); err == nil {
-		token, err := rawToken.SignedString([]byte(signingKey))
-
-		if err != nil {
-			log.Printf("Failed to create token")
-			return "", err
-		}
-
-		return token, nil
-	}
-
-	panic(errors.New("jwt_secret_key defined in config"))
 }

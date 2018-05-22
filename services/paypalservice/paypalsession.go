@@ -53,19 +53,56 @@ func Init() {
 	logging.Log("Paypal service initilalized!")
 }
 
-// MakePaypalPayment will create a paypal payment and return the PaymentResponse object with relevant links
+// MakePaypalDonation will create a paypal payment and return the CreatePaymentResponse object with relevant links
 // It will also store the payment object within the database for retrieval in the future.
-func MakePaypalPayment(amount paypalsdk.Amount) *paypalsdk.PaymentResponse {
-	redirectURI := "http://localhost:4000/transaction/complete"
-	cancelURI := "http://localhost:4000/transaction/cancelled"
-	description := "Description for this payment"
+func MakePaypalDonation(amount paypalsdk.Amount) *paypalsdk.CreatePaymentResp {
+	redirectURI := "http://localhost:4000/donate"
+	cancelURI := "http://localhost:4000/donate"
 
-	paymentResult, err := PaypalSession.CreateDirectPaypalPayment(amount, redirectURI, cancelURI, description)
+	p := paypalsdk.Payment{
+		Intent: "sale",
+		Payer: &paypalsdk.Payer{
+			PaymentMethod: "paypal",
+		},
+		RedirectURLs: &paypalsdk.RedirectURLs{
+			CancelURL: cancelURI,
+			ReturnURL: redirectURI,
+		},
+		Transactions: []paypalsdk.Transaction{
+			paypalsdk.Transaction{
+				Amount:      &amount,
+				Description: "Donation to monSTARS",
+				ItemList: &paypalsdk.ItemList{
+					Items: []paypalsdk.Item{
+						paypalsdk.Item{
+							Quantity: 1,
+							Name:     "Donation",
+							Price:    amount.Total,
+							Currency: amount.Currency,
+							SKU:      "donate",
+						},
+					},
+				},
+			}},
+	}
+
+	paymentResponse, err := PaypalSession.CreatePayment(p)
 
 	if err != nil {
 		logging.Log("payment result failed")
 		return nil
 	}
 
-	return paymentResult
+	return paymentResponse
+}
+
+//ExecutePayment will finalize and execute an approved PayPal payment
+func ExecutePayment(PayerID string, PaymentID string) *paypalsdk.ExecuteResponse {
+	executeResult, err := PaypalSession.ExecuteApprovedPayment(PaymentID, PayerID)
+
+	if err != nil {
+		return nil
+	}
+
+	return executeResult
 }

@@ -30,14 +30,14 @@ func Donate(c echo.Context) error {
 
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{
-			"message": "No credentials provided.",
+			"message": "No payment information provided",
 		})
 	}
 
-	amtFL, okamt := jsonMap["amount"].(float64)
+	amtFL, amterr := strconv.ParseFloat(jsonMap["amount"].(string), 64)
 	cur, okcur := jsonMap["currency"].(string)
 
-	if !okamt || !okcur {
+	if amterr != nil || !okcur {
 		return c.JSON(http.StatusBadRequest, map[string]string{
 			"message": "Invalid input",
 		})
@@ -50,7 +50,7 @@ func Donate(c echo.Context) error {
 		Total:    amt,
 	}
 
-	payment := paypalservice.MakePaypalPayment(amount)
+	payment := paypalservice.MakePaypalDonation(amount)
 
 	if payment == nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{
@@ -72,4 +72,56 @@ func Donate(c echo.Context) error {
 	return c.JSON(http.StatusInternalServerError, map[string]string{
 		"message": "Internal error, please try again",
 	})
+}
+
+func CompletePayment(c echo.Context) error {
+	jsonMap := make(map[string]interface{})
+
+	err := json.NewDecoder(c.Request().Body).Decode(&jsonMap)
+
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"message": "No payment information provided",
+		})
+	}
+
+	payerID, okpayer := jsonMap["payerID"].(string)
+	paymentID, okpayment := jsonMap["paymentId"].(string)
+
+	if !okpayer || !okpayment {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"message": "Invalid payment information",
+		})
+	}
+
+	executeResponse := paypalservice.ExecutePayment(payerID, paymentID)
+
+	if executeResponse == nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"message": "Failed to complete payment",
+		})
+	}
+	transaction := db.GetTransaction(paymentID)
+
+	if transaction == nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"message": "Transaction doesnt exist",
+		})
+	}
+
+	transaction.Executed(executeResponse)
+	ok, errorMsg := db.SaveTransaction(transaction)
+
+	if !ok {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"message": errorMsg,
+		})
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"message":  "Payment completed successfully.",
+		"amount":   transaction.Execution.Transactions[0].Amount.Total,
+		"currency": transaction.Execution.Transactions[0].Amount.Currency,
+	})
+
 }

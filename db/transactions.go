@@ -22,3 +22,31 @@ func NewTransaction(transaction *models.Transaction) (bool, string) {
 
 	return true, "User created successfully"
 }
+
+func GetTransaction(token string) *models.Transaction {
+	var transaction *models.Transaction
+
+	res, err := r.Table(TransactionsDB).Get(token).Run(Session)
+
+	if err != nil {
+		return nil
+	}
+
+	err = res.One(&transaction)
+
+	if err != nil {
+		return nil
+	}
+
+	return transaction
+}
+
+func SaveTransaction(transaction *models.Transaction) (bool, string) {
+	_, err := r.Table(TransactionsDB).Get(transaction.ID).Update(transaction).RunWrite(Session)
+
+	if err != nil {
+		return false, err.Error()
+	}
+
+	return true, ""
+}
