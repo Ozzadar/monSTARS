@@ -14,7 +14,7 @@ import (
 	"github.com/ozzadar/monSTARS/config"
 	"github.com/ozzadar/monSTARS/db"
 	"github.com/ozzadar/monSTARS/router"
-	"github.com/ozzadar/monSTARS/services/jwtservice"
+	"github.com/ozzadar/monSTARS/services/authservice"
 	"github.com/ozzadar/monSTARS/services/paypalservice"
 )
 
@@ -44,6 +44,6 @@ func main() {
 
 	e := router.New()
 
-	go jwtservice.JWTExpiryService()
+	go authservice.JWTExpiryService()
 	e.Start(ip + ":" + port)
 }

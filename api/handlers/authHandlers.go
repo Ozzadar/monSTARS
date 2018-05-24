@@ -17,7 +17,7 @@ import (
 	"github.com/labstack/echo"
 	"github.com/ozzadar/monSTARS/db"
 	"github.com/ozzadar/monSTARS/models"
-	"github.com/ozzadar/monSTARS/services/jwtservice/gameservice"
+	"github.com/ozzadar/monSTARS/services/authservice"
 )
 
 //Login logs user in
@@ -37,7 +37,7 @@ func Login(c echo.Context) error {
 
 	if okUsername && okPassword && username != "" && password != "" {
 
-		token := gameservice.LoginWithUserPass(username, password)
+		token := authservice.LoginWithUserPass(username, password)
 
 		return c.JSON(http.StatusOK, map[string]string{
 			"message": "Logged in!",
@@ -67,7 +67,7 @@ func VerifyJWT(c echo.Context) error {
 
 	if okJWT && token != "" {
 		//Check if valid login
-		isValid := db.JWTExists(token)
+		isValid, _ := authservice.VerifyJWT(token)
 
 		if isValid {
 			return c.JSON(http.StatusOK, map[string]string{

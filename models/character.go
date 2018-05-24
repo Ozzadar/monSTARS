@@ -11,5 +11,9 @@ package models
 
 //Character type
 type Character struct {
-	Name string `json:"name" gorethink:"name"`
+	Name     string   `json:"name" gorethink:"name"`
+	SpriteID string   `json:"spriteid" gorethink:"spriteid"`
+	MapID    string   `json:"mapid" gorethink:"mapid"`
+	Location Position `json:"position" gorethink:"position"`
+	OwnerID  string   `json:"ownerid" gorethink:"ownerid"`
 }

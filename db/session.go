@@ -22,6 +22,8 @@ var (
 	ActiveJWTDB = "active_tokens"
 	//TransactionsDB : name of the transactions table
 	TransactionsDB = "transactions"
+	//CharactersDB : name of the characters table
+	CharactersDB = "characters"
 )
 
 //Init supporting database functions
@@ -100,6 +102,20 @@ func InitDB() {
 		logging.Log("Failed in creating Transactions table")
 	}
 
+	//Create active jwt table
+	_, err = r.DB(rethinkdbname).TableCreate(CharactersDB, r.TableCreateOpts{
+		PrimaryKey: "name",
+	}).RunWrite(session)
+
+	if err != nil {
+		logging.Log("Failed in creating Characters table")
+	}
+
+	_, err = r.DB(rethinkdbname).Table(CharactersDB).IndexCreate("ownerid").Run(session)
+	if err != nil {
+		logging.Log(err)
+	}
+
 	session, err = r.Connect(r.ConnectOpts{
 		Address:  rethinkdbhost + ":" + rethinkdbport,
 		Database: rethinkdbname,
@@ -107,9 +123,20 @@ func InitDB() {
 
 	Session = session
 
-	err = r.DB(rethinkdbname).Table(ActiveJWTDB).IndexCreate("token").Exec(Session)
-	if err != nil {
-		logging.Log("Failed in creating secondary index for Active JWT table")
-	}
+	// character := &models.Character{
+	// 	Name:    "Character",
+	// 	OwnerID: "pmauviel",
+	// 	MapID:   "1",
+	// 	Location: models.Position{
+	// 		X: 0,
+	// 		Y: 0,
+	// 	},
+	// 	SpriteID: "male_123",
+	// }
 
+	// for i := 0; i < 10; i++ {
+	// 	character.Name += strconv.Itoa(i)
+
+	// 	CreateNewCharacter(character)
+	// }
 }

@@ -5,7 +5,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo"
-	"github.com/ozzadar/monSTARS/services/jwtservice/gameservice"
+	"github.com/ozzadar/monSTARS/services/gameservice"
 )
 
 var (

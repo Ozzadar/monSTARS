@@ -12,6 +12,25 @@ import (
 	"github.com/ozzadar/monSTARS/models"
 )
 
+//GetJWT returns a jwt
+func GetJWT(token string) *models.JwtToken {
+	var JWT *models.JwtToken
+
+	rows, err := r.Table(ActiveJWTDB).GetAllByIndex("token", token).Run(Session)
+
+	if err != nil {
+		return nil
+	}
+
+	err = rows.One(&JWT)
+
+	if err != nil {
+		return nil
+	}
+
+	return JWT
+}
+
 /*AddJWT adds jwt as active in DB
  */
 func AddJWT(jwt *models.JwtToken) (bool, string) {
@@ -35,21 +54,8 @@ func AddJWT(jwt *models.JwtToken) (bool, string) {
 
 /*JWTExists returns the requested user; this function assumes that the method has already authenticated the user*/
 func JWTExists(jwt string) bool {
-	var JWT *models.JwtToken
 
-	rows, err := r.Table(ActiveJWTDB).GetAllByIndex("token", jwt).Run(Session)
-
-	if err != nil {
-		return false
-	}
-
-	err = rows.One(&JWT)
-
-	if err != nil {
-		return false
-	}
-
-	return true
+	return GetJWT(jwt) != nil
 }
 
 /*GetAllActiveJWTs :returns all active JWTs in system
