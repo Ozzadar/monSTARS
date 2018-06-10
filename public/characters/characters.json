@@ -1,0 +1,32 @@
+{
+    "character_list": [
+        {
+            "name":"fancy",
+            "genders": [
+                {
+                    "gender": "male",
+                    "path": "fancy/fancy_m.png"
+                },
+                {
+                    "gender":"female",
+                    "path": "fancy/fancy_f.png"
+                }
+            ],
+            "property_path":"fancy/fancy.json"
+        },
+        {
+            "name":"steampunk",
+            "genders": [
+                {
+                    "gender": "male",
+                    "path": "steampunk/steampunk_m.png"
+                },
+                {
+                    "gender":"female",
+                    "path": "steampunk/steampunk_f.png"
+                }
+            ],
+            "property_path":"steampunk/steampunk.json"
+        }
+    ]
+}

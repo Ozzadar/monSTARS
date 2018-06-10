@@ -13,6 +13,7 @@ package models
 type Character struct {
 	Name     string   `json:"name" gorethink:"name"`
 	SpriteID string   `json:"spriteid" gorethink:"spriteid"`
+	Gender   string   `json:"gender" gorethink:"gender"`
 	MapID    string   `json:"mapid" gorethink:"mapid"`
 	Location Position `json:"position" gorethink:"position"`
 	OwnerID  string   `json:"ownerid" gorethink:"ownerid"`

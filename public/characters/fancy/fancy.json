@@ -1,0 +1,8 @@
+{
+    "total_x_pixels": "128",
+    "total_y_pixels": "256",
+    "animation_walk_left_row": 1,
+    "animation_walk_down_row": 0,
+    "animation_walk_right_row": 2,
+    "animation_walk_up_row": 3
+}

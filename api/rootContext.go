@@ -26,4 +26,6 @@ func MainGroup(e *echo.Echo) {
 	e.POST("/register", handlers.Register)
 	e.POST("/verify-jwt", handlers.VerifyJWT)
 	e.GET("/helloworld", handlers.HelloWorld)
+	e.Static("/assets", "public")
+
 }

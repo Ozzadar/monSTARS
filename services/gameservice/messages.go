@@ -1,6 +1,8 @@
 package gameservice
 
 import (
+	"fmt"
+
 	"github.com/ozzadar/monSTARS/services/authservice"
 )
 
@@ -26,6 +28,7 @@ func HandleMessage(client *Client, m Message) {
 			username := m.Payload["username"].(string)
 			password := m.Payload["password"].(string)
 
+			fmt.Println("logging in")
 			ProcessLoginRequest(username, password, client)
 			break
 		}
@@ -55,6 +58,7 @@ func ProcessLoginRequest(username string, password string, client *Client) {
 		_, tokenCheck := authservice.VerifyJWT(token)
 		client.authToken = tokenCheck
 
+		fmt.Println("login successful")
 		client.Send <- Message{
 			Type: "LoginSuccessful",
 			Payload: map[string]interface{}{
@@ -65,6 +69,7 @@ func ProcessLoginRequest(username string, password string, client *Client) {
 		return
 	}
 
+	fmt.Println("login failed")
 	SendLoginFailed(client)
 }
 
