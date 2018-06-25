@@ -57,19 +57,16 @@ func ProcessLoginRequest(username string, password string, client *Client) {
 
 		_, tokenCheck := authservice.VerifyJWT(token)
 		client.authToken = tokenCheck
-
-		fmt.Println("login successful")
 		client.Send <- Message{
 			Type: "LoginSuccessful",
 			Payload: map[string]interface{}{
-				"message": "Login successful",
-				"token":   token,
+				"message":  "LOGIN_SUCCESSFUL",
+				"token":    token,
+				"username": username,
 			},
 		}
 		return
 	}
-
-	fmt.Println("login failed")
 	SendLoginFailed(client)
 }
 
@@ -81,8 +78,9 @@ func ProcessLoginTokenRequest(token string, client *Client) {
 		client.Send <- Message{
 			Type: "LoginSuccessful",
 			Payload: map[string]interface{}{
-				"message": "Login successful",
-				"token":   token,
+				"message":  "LOGIN_SUCCESSFUL",
+				"token":    token,
+				"username": jwtToken.Owner,
 			},
 		}
 		return
